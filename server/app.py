@@ -21,10 +21,12 @@ CORS(app)
 from models import User, Event, Feedback
 from auth import auth_bp
 from events import events_bp
+from feedback import feedback_bp
 
 # Register blueprints
 app.register_blueprint(auth_bp, url_prefix='/auth')
 app.register_blueprint(events_bp, url_prefix='/events')
+app.register_blueprint(feedback_bp, url_prefix='')
 
 if __name__ == '__main__':
     with app.app_context():
