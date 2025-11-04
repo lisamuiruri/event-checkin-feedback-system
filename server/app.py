@@ -31,6 +31,14 @@ class Event(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(200), nullable=False)
     venue = db.Column(db.String(200), nullable=False)
+    date = db.Column(db.DateTime, nullable=True)
+
+class Feedback(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    event_id = db.Column(db.Integer, db.ForeignKey('event.id'), nullable=False)
+    rating = db.Column(db.Integer, nullable=False)
+    comment = db.Column(db.Text)
 
 @app.route('/')
 def home():
@@ -65,12 +73,43 @@ def get_events():
     return jsonify([{'id': e.id, 'title': e.title, 'venue': e.venue} for e in events])
 
 @app.route('/events', methods=['POST'])
+@jwt_required()
 def create_event():
+    current_user = get_jwt_identity()
+    if current_user['role'] != 'admin':
+        return jsonify({'message': 'Admin required'}), 403
+    
     data = request.get_json()
     event = Event(title=data['title'], venue=data['venue'])
     db.session.add(event)
     db.session.commit()
     return jsonify({'message': 'Event created'}), 201
+
+@app.route('/events/<int:event_id>/feedback', methods=['POST'])
+@jwt_required()
+def submit_feedback(event_id):
+    current_user = get_jwt_identity()
+    if current_user['role'] != 'employee':
+        return jsonify({'message': 'Employee required'}), 403
+    
+    if Feedback.query.filter_by(user_id=current_user['id'], event_id=event_id).first():
+        return jsonify({'message': 'Already submitted'}), 400
+    
+    data = request.get_json()
+    feedback = Feedback(user_id=current_user['id'], event_id=event_id, rating=data['rating'], comment=data.get('comment', ''))
+    db.session.add(feedback)
+    db.session.commit()
+    return jsonify({'message': 'Feedback submitted'}), 201
+
+@app.route('/feedback', methods=['GET'])
+@jwt_required()
+def get_all_feedback():
+    current_user = get_jwt_identity()
+    if current_user['role'] != 'admin':
+        return jsonify({'message': 'Admin required'}), 403
+    
+    feedback_list = db.session.query(Feedback, User, Event).join(User).join(Event).all()
+    return jsonify([{'id': f.id, 'rating': f.rating, 'comment': f.comment, 'user_name': u.name, 'event_title': e.title} for f, u, e in feedback_list])
 
 if __name__ == '__main__':
     with app.app_context():
