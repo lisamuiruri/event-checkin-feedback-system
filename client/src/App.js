@@ -1,10 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import Login from './Login';
 import './App.css';
 
 function App() {
   const [events, setEvents] = useState([]);
   const [newEvent, setNewEvent] = useState({ title: '', venue: '' });
+  const [user, setUser] = useState(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  // Check if user is logged in on app start
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    const userData = localStorage.getItem('user');
+    if (token && userData) {
+      setUser(JSON.parse(userData));
+      setIsLoggedIn(true);
+    }
+  }, []);
 
   // Fetch events from Flask backend
   useEffect(() => {
@@ -31,10 +44,34 @@ function App() {
     }
   };
 
+  const handleLogin = (userData) => {
+    setUser(userData);
+    setIsLoggedIn(true);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    setUser(null);
+    setIsLoggedIn(false);
+  };
+
+  if (!isLoggedIn) {
+    return <Login onLogin={handleLogin} />;
+  }
+
   return (
     <div className="App">
       <header className="App-header">
-        <h1>Event Check-in System</h1>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+          <h1>Event Check-in System</h1>
+          <div>
+            <span>Welcome, {user?.name}!</span>
+            <button onClick={handleLogout} style={{ marginLeft: '10px', padding: '5px 10px' }}>
+              Logout
+            </button>
+          </div>
+        </div>
         
         {/* Create Event Form */}
         <form onSubmit={createEvent} style={{ margin: '20px' }}>
