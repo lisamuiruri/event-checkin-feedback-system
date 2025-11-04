@@ -19,6 +19,10 @@ CORS(app)
 
 # Import models to ensure tables are created
 from models import User, Event, Feedback
+from auth import auth_bp
+
+# Register blueprints
+app.register_blueprint(auth_bp, url_prefix='/auth')
 
 if __name__ == '__main__':
     with app.app_context():
