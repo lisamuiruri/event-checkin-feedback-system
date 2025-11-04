@@ -1,41 +1,36 @@
-from flask import Flask
+from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
-from flask_jwt_extended import JWTManager
 from flask_cors import CORS
-import os
 
 app = Flask(__name__)
-
-# Configuration
-app.config['SECRET_KEY'] = 'your-secret-key-change-in-production'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///events.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['JWT_SECRET_KEY'] = 'jwt-secret-change-in-production'
-
-# Initialize extensions
 db = SQLAlchemy(app)
-jwt = JWTManager(app)
 CORS(app)
 
-# Import models to ensure tables are created
-from models import User, Event, Feedback
-from auth import auth_bp
-from events import events_bp
-from feedback import feedback_bp
+class Event(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    venue = db.Column(db.String(200), nullable=False)
 
-# Register blueprints
-app.register_blueprint(auth_bp, url_prefix='/auth')
-app.register_blueprint(events_bp, url_prefix='/events')
-app.register_blueprint(feedback_bp, url_prefix='')
+@app.route('/')
+def home():
+    return jsonify({'message': 'Event Check-in API is running!', 'endpoints': ['/events']})
+
+@app.route('/events', methods=['GET'])
+def get_events():
+    events = Event.query.all()
+    return jsonify([{'id': e.id, 'title': e.title, 'venue': e.venue} for e in events])
+
+@app.route('/events', methods=['POST'])
+def create_event():
+    data = request.get_json()
+    event = Event(title=data['title'], venue=data['venue'])
+    db.session.add(event)
+    db.session.commit()
+    return jsonify({'message': 'Event created'}), 201
 
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-        # Create default admin user
-        admin = User.query.filter_by(email='admin@company.com').first()
-        if not admin:
-            admin = User(name='Admin', email='admin@company.com', role='admin')
-            admin.set_password('admin123')
-            db.session.add(admin)
-            db.session.commit()
     app.run(debug=True)
