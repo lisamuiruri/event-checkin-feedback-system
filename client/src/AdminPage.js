@@ -14,7 +14,7 @@ function AdminPage({ user }) {
 
   const fetchEvents = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/events');
+      const response = await axios.get('http://localhost:5001/events');
       setEvents(response.data);
     } catch (error) {
       console.error('Error fetching events:', error);
@@ -24,7 +24,7 @@ function AdminPage({ user }) {
   const fetchFeedback = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:5000/feedback', {
+      const response = await axios.get('http://localhost:5001/feedback', {
         headers: { Authorization: `Bearer ${token}` }
       });
       setFeedback(response.data);
@@ -35,9 +35,16 @@ function AdminPage({ user }) {
 
   const createEvent = async (e) => {
     e.preventDefault();
+    
+    // Validate form
+    if (!newEvent.title || !newEvent.venue || !newEvent.date) {
+      alert('Please fill in all fields');
+      return;
+    }
+    
     try {
       const token = localStorage.getItem('token');
-      await axios.post('http://localhost:5000/events', newEvent, {
+      await axios.post('http://localhost:5001/events', newEvent, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setNewEvent({ title: '', date: '', venue: '' });
@@ -48,10 +55,23 @@ function AdminPage({ user }) {
     }
   };
 
+  const deleteEvent = async (eventId) => {
+    if (window.confirm('Are you sure you want to delete this event?')) {
+      try {
+        const token = localStorage.getItem('token');
+        await axios.delete(`http://localhost:5001/events/${eventId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        fetchEvents();
+        alert('Event deleted successfully!');
+      } catch (error) {
+        alert('Error deleting event');
+      }
+    }
+  };
+
   return (
     <div style={{ padding: '20px' }}>
-      <h2>Admin Dashboard</h2>
-      
       {/* Tab Navigation */}
       <div style={{ marginBottom: '20px' }}>
         <button 
@@ -114,9 +134,17 @@ function AdminPage({ user }) {
 
           <h3>All Events</h3>
           {events.map((event) => (
-            <div key={event.id} style={{ border: '1px solid #ccc', margin: '10px 0', padding: '15px' }}>
-              <h4>{event.title}</h4>
-              <p>Venue: {event.venue}</p>
+            <div key={event.id} style={{ border: '1px solid #ccc', margin: '10px 0', padding: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <h4>{event.title}</h4>
+                <p>Venue: {event.venue}</p>
+              </div>
+              <button 
+                onClick={() => deleteEvent(event.id)}
+                style={{ padding: '8px 16px', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '4px' }}
+              >
+                Delete
+              </button>
             </div>
           ))}
         </div>

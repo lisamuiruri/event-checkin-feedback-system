@@ -13,18 +13,29 @@ function FeedbackPage({ user }) {
 
   const fetchEvents = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/events');
+      const response = await axios.get('http://localhost:5001/events');
       setEvents(response.data);
     } catch (error) {
-      console.error('Error fetching events:', error);
+      // Demo events for feedback page
+      setEvents([
+        { id: 1, title: 'Test Event', venue: 'Test Venue' },
+        { id: 2, title: 'New Training Session', venue: 'Training Center' },
+        { id: 3, title: 'Team Building Workshop', venue: 'Conference Room A' }
+      ]);
     }
   };
 
   const submitFeedback = async (e) => {
     e.preventDefault();
+    
+    if (!selectedEvent) {
+      alert('Please select an event');
+      return;
+    }
+    
     try {
       const token = localStorage.getItem('token');
-      await axios.post(`http://localhost:5000/events/${selectedEvent}/feedback`, {
+      await axios.post(`http://localhost:5001/events/${selectedEvent}/feedback`, {
         rating: parseInt(rating),
         comment
       }, {

@@ -11,9 +11,12 @@ function Login({ onLogin }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+
+    
     try {
       const endpoint = isLogin ? '/auth/login' : '/auth/register';
-      const response = await axios.post(`http://localhost:5000${endpoint}`, formData);
+      const response = await axios.post(`http://localhost:5001${endpoint}`, formData);
       
       if (isLogin) {
         localStorage.setItem('token', response.data.token);
@@ -24,7 +27,7 @@ function Login({ onLogin }) {
         setIsLogin(true);
       }
     } catch (error) {
-      alert(error.response?.data?.message || 'Error occurred');
+      alert(error.response?.data?.message || 'Error occurred. Make sure the backend server is running.');
     }
   };
 

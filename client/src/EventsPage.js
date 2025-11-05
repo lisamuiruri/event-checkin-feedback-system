@@ -13,11 +13,11 @@ function EventsPage({ user }) {
   const fetchEvents = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('http://localhost:5000/events');
+      const response = await axios.get('http://localhost:5001/events');
       setEvents(response.data);
       setError('');
     } catch (error) {
-      setError('Failed to load events');
+      setError('Failed to load events. Make sure the backend server is running.');
       console.error('Error fetching events:', error);
     } finally {
       setLoading(false);

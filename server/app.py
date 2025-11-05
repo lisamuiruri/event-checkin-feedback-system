@@ -79,11 +79,32 @@ def create_event():
     if current_user['role'] != 'admin':
         return jsonify({'message': 'Admin required'}), 403
     
-    data = request.get_json()
-    event = Event(title=data['title'], venue=data['venue'])
-    db.session.add(event)
+    try:
+        data = request.get_json()
+        from datetime import datetime
+        
+        date_obj = None
+        if data.get('date'):
+            date_obj = datetime.strptime(data['date'], '%Y-%m-%d')
+        
+        event = Event(title=data['title'], venue=data['venue'], date=date_obj)
+        db.session.add(event)
+        db.session.commit()
+        return jsonify({'message': 'Event created'}), 201
+    except Exception as e:
+        return jsonify({'message': f'Error creating event: {str(e)}'}), 400
+
+@app.route('/events/<int:event_id>', methods=['DELETE'])
+@jwt_required()
+def delete_event(event_id):
+    current_user = get_jwt_identity()
+    if current_user['role'] != 'admin':
+        return jsonify({'message': 'Admin required'}), 403
+    
+    event = Event.query.get_or_404(event_id)
+    db.session.delete(event)
     db.session.commit()
-    return jsonify({'message': 'Event created'}), 201
+    return jsonify({'message': 'Event deleted'}), 200
 
 @app.route('/events/<int:event_id>/feedback', methods=['POST'])
 @jwt_required()
@@ -122,4 +143,4 @@ if __name__ == '__main__':
             db.session.add(admin)
             db.session.commit()
             print('Admin created: admin@company.com / admin123')
-    app.run(debug=True)
+    app.run(debug=True, host='localhost', port=5001)
