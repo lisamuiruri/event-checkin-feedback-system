@@ -3,6 +3,8 @@ import axios from 'axios';
 
 function EventsPage({ user }) {
   const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     fetchEvents();
@@ -10,10 +12,15 @@ function EventsPage({ user }) {
 
   const fetchEvents = async () => {
     try {
+      setLoading(true);
       const response = await axios.get('http://localhost:5000/events');
       setEvents(response.data);
+      setError('');
     } catch (error) {
+      setError('Failed to load events');
       console.error('Error fetching events:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -21,9 +28,18 @@ function EventsPage({ user }) {
     alert(`Registered for event ${eventId}!`);
   };
 
+  if (loading) {
+    return <div style={{ padding: '20px', textAlign: 'center' }}>Loading events...</div>;
+  }
+
   return (
     <div style={{ padding: '20px' }}>
       <h2>Upcoming Events</h2>
+      {error && (
+        <div style={{ color: 'red', padding: '10px', marginBottom: '10px', border: '1px solid red', borderRadius: '4px' }}>
+          {error}
+        </div>
+      )}
       {events.length === 0 ? (
         <p>No events available.</p>
       ) : (
