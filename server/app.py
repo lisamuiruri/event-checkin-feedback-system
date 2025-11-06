@@ -132,6 +132,18 @@ def get_all_feedback():
     feedback_list = db.session.query(Feedback, User, Event).join(User).join(Event).all()
     return jsonify([{'id': f.id, 'rating': f.rating, 'comment': f.comment, 'user_name': u.name, 'event_title': e.title} for f, u, e in feedback_list])
 
+@app.route('/feedback/<int:feedback_id>', methods=['DELETE'])
+@jwt_required()
+def delete_feedback(feedback_id):
+    current_user = get_jwt_identity()
+    if current_user['role'] != 'admin':
+        return jsonify({'message': 'Admin required'}), 403
+    
+    feedback = Feedback.query.get_or_404(feedback_id)
+    db.session.delete(feedback)
+    db.session.commit()
+    return jsonify({'message': 'Feedback deleted'}), 200
+
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()

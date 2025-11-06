@@ -36,7 +36,7 @@ function AdminPage({ user }) {
   const createEvent = async (e) => {
     e.preventDefault();
     
-    // Validate form
+    // validation form
     if (!newEvent.title || !newEvent.venue || !newEvent.date) {
       alert('Please fill in all fields');
       return;
@@ -69,6 +69,8 @@ function AdminPage({ user }) {
       }
     }
   };
+
+
 
   return (
     <div style={{ padding: '20px' }}>
